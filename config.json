@@ -14,10 +14,12 @@
 	[
 		{
 			"name" : "AVControl",
+			"enabled" : true,
 			"configPath" : "config/AVControl.json"
 		},
 		{
 			"name" : "test",
+			"enabled" : true,
 			"configPath" : "config/test.json"
 		}
 	]
