@@ -1,0 +1,105 @@
+{
+"projectname" : "testChat",
+	"datapoints" : 
+	[
+		{
+			"id" : "localMYSQL",
+			"type" : "MYSQL",
+			"enabled" : true,
+			"address" : "127.0.0.1",
+			"username" : "root",
+			"password" : "root",
+			"database" : "Log"
+		}
+	],
+"inputs" : 
+	[
+		{
+			"id" : "P1in",
+			"description" : "http://WEBSocketIP:WebSocketPort/testChat/P1",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : "P1"
+	 	},
+		{
+			"id" : "P2in",
+			"description" : "http://WEBSocketIP:WebSocketPort/testChat/P2",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : "P2"
+	 	},
+		{
+			"id" : "postData",
+			"description" : "POST http://HTTPBindIP:HTTPBindPort/chat/1 or /chat/2",
+			"enabled" : true,
+			"type" : "HTTP",
+			"method" : "POST",
+			"address" : 
+				{
+					"value" : "chat/{ID}",
+					"parameters" : 
+							{"ID" : [1, 2]}
+				}
+		}
+	],
+"outputs" : 
+	[
+		{
+			"id" : "P1out",
+			"description" : "http://WEBSocketIP:WebSocketPort/testChat/P1",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : "P1"
+	 	},
+		{
+			"id" : "P2out",
+			"description" : "http://WEBSocketIP:WebSocketPort/testChat/P2",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : "P2"
+	 	},
+		{
+			"id" : "PostLog",
+			"enabled" : true,
+			"type" : "DATAPOINT",
+			"datapoint" : "localMYSQL",
+			"table" : "PostLog",
+			"columns" : ["happened", "whoTo", "what"]
+		}
+	],
+"transformers" :
+	[
+		{
+			"id" : "P1toP2",
+			"enabled": true,
+			"input": ["P1in"],
+			"output": ["P2out"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['P2out'] = 'P1 says: ' + payload;"
+		},
+		{
+			"id" : "P2toP1",
+			"enabled": true,
+			"input": ["P2in"],
+			"output": ["P1out"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['P1out'] = 'P2 says: ' + payload;"
+		},
+		{
+			"id" : "PostLogTrans",
+			"enabled" : true,
+			"input" : ["postData"],
+			"output" : ["PostLog"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['PostLog'] = {happened: 'now()', whoTo: parameters['ID'], what: payload};"
+		},
+		{
+			"id" : "PostLogTrans",
+			"enabled" : true,
+			"input" : ["postData"],
+			"output" : ["P1out", "P2out"],
+			"type" : "JAVASCRIPT",
+			"process" : "if(parameters['ID']==1){output['P1out']=payload;output['P2out']=null;} else {output['P1out']=null;output['P2out']=payload;}"
+		}
+	]
+}
