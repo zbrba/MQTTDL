@@ -15,6 +15,18 @@ This concept came from necessity after wanting to quickly 'patch' data
 for a number of different projects based on the MQTT protocol.
 
 
+Getting Started:
+
+*	Install node.js
+*	Install mosquitto
+*	Use npm to install a MYSQL mysql for node.js
+*	Use npm to install websockets (or use the included web socket library from http://github.com/ncr/node.ws.js) 
+*	Download the example config files, server.js and ws.js
+*	Run the server:
+
+		node server.js --debug
+
+
 Inputs and Outputs
 -------
 Since then, it has branched to allow many different input and 

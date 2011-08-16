@@ -14,12 +14,17 @@
 	[
 		{
 			"name" : "AVControl",
-			"enabled" : true,
+			"enabled" : false,
 			"configPath" : "config/AVControl.json"
 		},
 		{
-			"name" : "test",
+			"name" : "testChat",
 			"enabled" : true,
+			"configPath" : "config/testChat.json"
+		},
+		{
+			"name" : "test",
+			"enabled" : false,
 			"configPath" : "config/test.json"
 		}
 	]

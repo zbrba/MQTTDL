@@ -84,8 +84,8 @@ fs.readFile('config.json', function (err, configdata) { //read the config file a
 			} else {
 				fs.readFile(project.configPath, function (err, projectConfigData) { //read the config file and then open the servers
 					projectConfig = JSON.parse(projectConfigData);
-					outputAndParameters = matched_output(projectConfig.outputs.items, address, "WEBSOCKET", project.name,  _DEBUG);
-					inputAndParameters = matched_input(projectConfig.inputs.items, address, "WEBSOCKET", "", project.name,  _DEBUG);
+					outputAndParameters = matched_output(projectConfig.outputs, address, "WEBSOCKET", project.name,  _DEBUG);
+					inputAndParameters = matched_input(projectConfig.inputs, address, "WEBSOCKET", "", project.name,  _DEBUG);
 					if(_DEBUG) console.log("inputParam:");
 					if(_DEBUG) console.log(inputAndParameters);
 					if(_DEBUG) console.log("outputParam:");
@@ -216,9 +216,11 @@ function matched_input(inputs, address, type, httpMethod, projectname, debug){
 */
 function project_match(address, type, config){
 	for(projectID in config.projects){
-		projectName = config.projects[projectID].name;
-		if(address.substring(1, projectName.length + 1) == projectName) //strip leading '/'
-			return config.projects[projectID];
+		if(config.projects[projectID].enabled) {
+			projectName = config.projects[projectID].name;
+			if(address.substring(1, projectName.length + 1) == projectName) //strip leading '/'
+				return config.projects[projectID];
+		}
 	}
 	return null;
 }
@@ -230,7 +232,7 @@ function project_match(address, type, config){
 */
 function perform_action(address, payload, type, httpMethod, config, projectConfig, projectName, debug){
 	if (debug == undefined) debug = false;
-	inputAndParameters = matched_input(projectConfig.inputs.items, address, type, httpMethod, projectName, debug);
+	inputAndParameters = matched_input(projectConfig.inputs, address, type, httpMethod, projectName, debug);
 	if(debug) console.log('received input: ' + payload + ' at address: ' + address);
 	if(debug) console.log(inputAndParameters);
 	if(inputAndParameters != undefined) 
@@ -246,15 +248,15 @@ function perform_action(address, payload, type, httpMethod, config, projectConfi
 */
 function perform_transformations(inputAndParameters, payload, config, projectConfig, debug){
 	if (debug == undefined) debug = false;
-	projectConfig.transformers.items.forEach(function (trans) {
+	projectConfig.transformers.forEach(function (trans) {
 		trans.input.forEach(function (traninput) {
 			if (traninput == inputAndParameters.input.id && trans.enabled) {
 	            var outputarray = perform_transform(inputAndParameters, payload, trans, debug);
 				//and then write outputs to those transformation outputs.
 				for (outputvaluekey in outputarray) {
-				    for(outputID in projectConfig.outputs.items){
-						if (projectConfig.outputs.items[outputID].id == outputvaluekey && projectConfig.outputs.items[outputID].enabled) {
-							write_output(outputarray[outputvaluekey], projectConfig.outputs.items[outputID], config, projectConfig, debug);
+				    for(outputID in projectConfig.outputs){
+						if (projectConfig.outputs[outputID].id == outputvaluekey && projectConfig.outputs[outputID].enabled) {
+							write_output(outputarray[outputvaluekey], projectConfig.outputs[outputID], config, projectConfig, debug);
 			            }
 			        }
 			    }
@@ -300,7 +302,11 @@ function perform_transform(inputAndParameters, payload, transNode, debug) {
 */
 function write_output(data, output, config, projectConfig, debug) {
 	if (debug == undefined) debug = false;
-	if (debug) console.log('writing output to ' + output.id + ' :: ' + data);
+	
+	if(data == null)
+	 	if (debug) console.log('skipping output' + output.id + ' since data was null');
+	else 
+		if (debug) console.log('writing output to ' + output.id + ' :: ' + data);
 	
 	if (output.type == "MQTT") { //send the data back to an MQTT channel - this could realistically be used with MQTT component instead of subprocess.
    	    if (debug) console.log('publishing "' + data + '" to MQTT address: ' + config.MQTTBrokerAddress + ':' + 

@@ -13,9 +13,6 @@
 	}
 ],
 "inputs" : 
-{
-	"description" : "inputs of the current project",
-	"items" :
 	[
 		{
 			"id" : "raw",
@@ -40,12 +37,8 @@
 							{"ID" : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
 				}
 		 }
-	]
-},
+	],
 "outputs" : 
-{
-	"description" : "outputs of the current project",
-	"items" :
 	[
 		{
 			"id" : "refined",
@@ -78,12 +71,8 @@
 			"columns" : ["happened", "what", "address"]
 			
 		}
-	]
-},
+	],
 "transformers" :
-{
-	"description" : "data transformers",
-	"items" :
 	[
 		{
 			"id" : "RawToRefined",
@@ -121,5 +110,4 @@
 			"process" : "output['rawCountLog'] = {what: payload, happened: 'now()'}; output['refined'] = 'selected ' + parameters['ID']"
 		}
 	]
-}
 }

@@ -12,9 +12,6 @@
 	}
 ],
 "inputs" : 
-{
-	"description" : "inputs of the current project",
-	"items" :
 	[
 		{
 			"id" : "classsource",
@@ -38,12 +35,8 @@
 							{"tableID" : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
 				}
 		 }
-	]
-},
+	],
 "outputs" : 
-{
-	"description" : "outputs of the current project",
-	"items" :
 	[
 		{
 			"id" : "AXONLLTCP",
@@ -76,12 +69,8 @@
 			"type" : "LOG",
 			"path" : "~/MQTTDL/all"
 		}
-	]
-},
+	],
 "transformers" :
-{
-	"description" : "data transformers",
-	"items" :
 	[
 		{
 			"id" : "ChangeTableSource",
@@ -114,5 +103,4 @@
 			"process": "output['AXONLLWS'] = '<struct><var><name>_COMMANDINT</name><data>2</data></var><var><name>_ARG1</name><data>' + payload + '</data></var></struct>\\r'"
 		}
 	]
-}
 }
