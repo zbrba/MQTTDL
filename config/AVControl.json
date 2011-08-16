@@ -1,0 +1,118 @@
+{
+"projectname" : "AVControl",
+"datapoints" : 
+[
+	{
+		"id" : "localMYSQL",
+		"type" : "MYSQL",
+		"address" : "127.0.0.1",
+		"username" : "root",
+		"password" : "root",
+		"database" : "AVControl"
+	}
+],
+"inputs" : 
+{
+	"description" : "inputs of the current project",
+	"items" :
+	[
+		{
+			"id" : "classsource",
+			"enabled" : true,
+			"name" : "Table 8 source",
+			"description" : "HTTP GET to /AVConrol/class/source",
+			"type" : "HTTP",
+			"address" : "class/source",
+			"method" : "GET"
+	 	},
+		{
+			"id" : "tablesource",
+			"enabled" : true,
+			"name" : "Table x source",
+			"description" : "MQTT pub /AVConrol/table/{x}/source",
+			"type" : "WEBSOCKET",
+			"address" : 
+				{
+					"value" : "table/{tableID}/source",
+					"parameters" : 
+							{"tableID" : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
+				}
+		 }
+	]
+},
+"outputs" : 
+{
+	"description" : "outputs of the current project",
+	"items" :
+	[
+		{
+			"id" : "AXONLLTCP",
+			"enabled" : true,
+			"name" : "Axon AV Control Unit",
+			"type" : "TCP",
+			"description": "Axon Learning Lab AMX AV Unit",
+			"address" : "192.168.66.151",
+			"port" : 8080
+			
+		},
+		{
+			"id" : "AXONLLWS",
+			"enabled" : true,
+			"description" : "AVControl/ws",
+			"type" : "WEBSOCKET",
+			"address" : "WS"
+		},
+		{
+			"id" : "AXONLLMySQL",
+			"enabled" : true,
+			"type" : "DATAPOINT",
+			"datapoint" : "localMYSQL",
+			"table" : "Changes",
+			"columns" : ["commandint", "var1", "var2", "happened"]
+		},
+		{
+			"id" : "LOGAll",
+			"enabled": false,
+			"type" : "LOG",
+			"path" : "~/MQTTDL/all"
+		}
+	]
+},
+"transformers" :
+{
+	"description" : "data transformers",
+	"items" :
+	[
+		{
+			"id" : "ChangeTableSource",
+			"enabled": true,
+			"name" : "tbl source",
+			"description" : "test raw to change table source",
+			"input": ["tablesource"],
+			"output": ["AXONLLWS"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['AXONLLWS'] = '<struct><var><name>_COMMANDINT</name><data>3</data></var><var><name>_ARG1</name><data>' + payload + '</data></var><var><name>_ARG2</name><data>' + parameters['tableID'] + '</data></var></struct>\\r'"
+		},
+		{
+			"id" : "TableSourceLog",
+			"enabled" : false,
+			"name" : "Table source log",
+			"description" : "write http data to sql table",
+			"input" : ["tablesource"],
+			"output" : ["AXONLLMySQL"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['AXONLLMySQL'] = {commandint: 3, var1: payload, var2: parameters['tableID'], happened: 'now()'};"
+		},
+		{
+			"id" : "ChangeClassSource",
+			"enabled": true,
+			"name" : "class source",
+			"description" : "change class source",
+			"input": ["classsource"],
+			"output": ["AXONLLWS"],
+			"type" : "JAVASCRIPT",
+			"process": "output['AXONLLWS'] = '<struct><var><name>_COMMANDINT</name><data>2</data></var><var><name>_ARG1</name><data>' + payload + '</data></var></struct>\\r'"
+		}
+	]
+}
+}

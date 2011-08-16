@@ -1,0 +1,125 @@
+{
+"projectname" : "testMe",
+"datapoints" : 
+[
+	{
+		"id" : "localMYSQL",
+		"type" : "MYSQL",
+		"enabled" : true,
+		"address" : "127.0.0.1",
+		"username" : "root",
+		"password" : "root",
+		"database" : "test"
+	}
+],
+"inputs" : 
+{
+	"description" : "inputs of the current project",
+	"items" :
+	[
+		{
+			"id" : "raw",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : "raw"
+	 	},
+		{
+			"id" : "refined",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : "refined"
+	 	},
+		{
+			"id" : "rawcount",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : 
+				{
+					"value" : "raw/{ID}",
+					"parameters" : 
+							{"ID" : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
+				}
+		 }
+	]
+},
+"outputs" : 
+{
+	"description" : "outputs of the current project",
+	"items" :
+	[
+		{
+			"id" : "refined",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : "refined"
+			
+		},
+		{
+			"id" : "raw",
+			"enabled" : true,
+			"type" : "WEBSOCKET",
+			"address" : "raw"
+			
+		},
+		{
+			"id" : "rawCountLog",
+			"enabled" : true,
+			"type" : "DATAPOINT",
+			"datapoint" : "localMYSQL",
+			"table" : "rawcount",
+			"columns" : ["what", "happened"]
+		},
+		{
+			"id" : "dbLog",
+			"enabled" : true,
+			"type" : "DATAPOINT",
+			"datapoint" : "localMYSQL",
+			"table" : "test",
+			"columns" : ["happened", "what", "address"]
+			
+		}
+	]
+},
+"transformers" :
+{
+	"description" : "data transformers",
+	"items" :
+	[
+		{
+			"id" : "RawToRefined",
+			"enabled": true,
+			"input": ["raw"],
+			"output": ["refined"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['refined'] = payload"
+		},
+		{
+			"id" : "RefinedToRaw",
+			"enabled": true,
+			"input": ["refined"],
+			"output": ["raw"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['raw'] = payload"
+		},
+		{
+			"id" : "Raw2dbLog",
+			"enabled" : false,
+			"input" : ["raw"],
+			"output" : ["dbLog"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['dbLog'] = {what: payload, happened: 'now()', address: address};"
+			
+		},
+		{
+			"id" : "logCount",
+			"enabled" : false,
+			"name" : "Table source log",
+			"description" : "write http data to sql table",
+			"input" : ["rawcount"],
+			"output" : ["rawCountLog", "refined"],
+			"type" : "JAVASCRIPT",
+			"process" : "output['rawCountLog'] = {what: payload, happened: 'now()'}; output['refined'] = 'selected ' + parameters['ID']"
+		}
+	]
+}
+}
