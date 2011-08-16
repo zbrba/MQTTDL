@@ -1,0 +1,225 @@
+MQTT data transformation layer (MQTTDTL)
+
+What it is designed to do is to be an intermediary data "processor" for
+ data published to an MQTT channel.
+
+	What does it do:
+It gives you the ability to quickly configure data transformations from
+ different input sources and redirect to different output sources.
+
+	How:
+It stores a configuration in a json file. This configuration is read at
+ start up. It will "listen" on all defined input "channels"; if an input
+ is received on one of these channels, all attached "transformers" will be
+ executed and data will then be sent to the relevant output "channels".
+
+
+	An Example:
+The following document will be written using an example of a building
+ monitoring system (air-conditioning etc).
+
+	Starting a Project:
+You start by defining a project. This project lives in an MQTT channel and
+ all sub channels (e.g. BuildingControl/# ) At this point, the MQTT data
+ broker, and other configuration is also set, but more on that later.
+
+		"config" : 
+		{
+			"projectname" : "BuildingControl",
+			"MQTTBrokerAddress" : "summer.ceit.uq.edu.au",
+			"MQTTBrokerPort" : 1883,
+			"HTTPBindIP" : "192.168.1.106",
+			"HTTPBindPort" : 8080,
+
+			"WEBSocketIP" : "192.168.1.106",
+			"WebSocketPort" : 8081,
+
+			"MYSQLAddress" : "127.0.0.1",
+			"MYSQLUsername" : "root",
+			"MYSQLPassword" : "root"
+		}
+
+		Configuring Inputs:
+You can then define input channels. In the simple case, these inputs may
+ by an MQTT channel, for example BuildingControl/sensor/temp/raw1 would be 
+ defined as input:
+		{
+			"id" : 0,
+			"name" : "raw temp sensor 1",
+			"description" : "Example input of a raw temp sensor",
+			"type" : "MQTT",
+			"address" : "sensor/temp/raw1"
+		}
+
+You can define many of these input channels, however each must have a unique
+ id. The current supported types are: MQTT, HTTP (GET and POST).
+		{
+			"id" : 1,
+			"name" : "HTTP GET example",
+			"description" : "HTTP GET to /BuildingControl/button/1",
+			"type" : "HTTP",
+			"address" : "button/1",
+			"method" : "GET"
+		}
+
+
+		Configuring Outputs:
+The next logical step is to configure the "output" channels. Outputs can 
+ be of many types, more commonly outputs are of type MQTT - i.e. an output
+ is another MQTT channel which gets published to.
+For example:
+		{
+			"id" : 0,
+			"name" : "refined out 1",
+			"type" : "MQTT",
+			"address" : "refined/1"
+		}
+
+Other outputs are also available, e.g. MQTT, TCP, SQL, Websocket.
+
+
+
+		Configuring "Transformers":
+Once you have one input and output, you can go about "wiring" them together,
+ a simple example here is to round the raw data input to the nearest 
+ whole number. Using the input and output we already have:
+	{
+		"id" : 0,
+		"name" : "round raw temp 1",
+		"description" : "Round the raw temp 1 input, send to output 0",
+		"input" : 0,
+		"output" : [0],
+		"enabled" : true,
+		"process" : "output[0] = Math.round(payload);"
+	}
+	
+Here, the process block defined what "code" is executed on the data payload.
+ This code can be any executable json or javascript (so be careful!), this
+ is clearly a security whole which will need to be fixed at some point 
+ down the track.
+
+The input variables available to this code are:
+	var payload (str) - the input data.
+	var channel (str) - the channel that this transformer has been fired on. 
+
+
+
+More doco to do.
+
+
+
+
+
+
+
+Notes on HTTP:
+ The current implementation uses a local HTTP server (on the MQTTDTL Server).
+ The BindIP and port need to be configured at the start of the config.config
+ object (See HTTPBindIP, HTTPBindPort)
+ Note that HTTP is currently only of form INPUT, the reason for this is that
+ I haven't come up with a good way of handling the "real time data" aspect
+ of all other inputs and outputs and how this contrasts to HTTP.
+
+
+
+
+Ideas for future enhancement:
+ RSS inputs
+ RSS outputs
+ MAIL output.
+ IMAP inputs.
+	payload is body
+	subject is address.
+	projectname@<serveraddress>.com
+ HTTP GET which reads persistent value (transformer pips some value to an
+   output (which is also the same HTTP input))
+ HTTP - "responce" field as an option on the input which you could have a transformer feedback to a HTTP input.
+ 
+ for inputs:
+ 
+		{
+			"id" : 4,
+			"enabled" : true,
+			"name" : "Table 8 source",
+			"description" : "MQTT pub /AVConrol/table/x/source",
+			"type" : "MQTT",
+			"address" : "table/{tableid}/source",
+			"addressparameters" :
+				[
+					{"tableid": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+				]
+	 	}
+ 
+ ALSO OPTION:
+ 
+ 		{
+			"id" : 4,
+			"enabled" : true,
+			"name" : "Table 8 source",
+			"description" : "MQTT pub /AVConrol/table/x/y",
+			"type" : "MQTT",
+			"address" : "table/{tableid}/{tableaction}",
+			"addressparameters" :
+				[
+					{"tableid": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]},
+					{"tableaction": ["source", "pelmetlight", "boardlight"]}
+				]
+	 	}
+ 
+ ------------------
+ 
+	for transformers:
+ 		{	
+			
+			"onfail": "input[0] = '';" ,
+			"onsucess": ""
+		}
+		{
+			"type" : "MYSQLLOOKUP",
+			"process" : 
+				{"table" : "stateinfo",
+				"column" : "statexmldesc",
+				"lookupfield" : "stateid",
+				"lookupvalue" : payload
+				//select statexmldesc from stateinfo where stateid = 'payload';
+				}
+		}
+		
+		
+	possible failes are:
+		transformer code fail
+		transformer db lookup fail.
+		tcp host fail
+		mqtt host fail.
+		websocket no client listening.
+		tranformer logic reports fail.
+		invalid input.
+		address does not exist. e.g. address request: AVControl/doesn'texist
+		
+	project does not exist.
+	
+	
+other ideas:
+	various config files hosted on the server (i.e. projectname.json which is read once an input is received).
+	if that config file does not exist then it will return 'project does not exist' error.
+	if that config file does exist it will evaluate all defined inputs and if an input does not exist it will return "Address does not exist".
+	server config is the address and ports that it takes input from i.e. mqtt server, http bind address etc.
+	project config defines the input addresses, output addresses etc.
+	
+	
+	indexes are string not numbers (therefor your transformers for MYSQL will go to the column name also.
+	for input paramters, your transfrormer will refer to that by a parameter[inputparametername] array.
+	
+	
+	
+	
+TODO 27/7/2011
+1. Address Parameters - done.
+1 a) transformers utilise the parameters passed. done.
+2. IDs are names instead of ints. - done.
+2. Transformers with MYSQL lookups.
+3. onsucess and onfail actions (output back to input)
+4. sql uses column names as index for output array. - done.
+
+for demo:
+http://172.16.174.132/all/aLL.php
