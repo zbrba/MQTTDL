@@ -24,7 +24,52 @@ Getting Started:
 *	Download the example config files, server.js and ws.js
 *	Run the server:
 
-		node server.js --debug
+		node server.js [--debug] [--verbose] [--config pathtoconfig]
+
+
+Projects
+-------
+MQTTDL has the ability to handle multiple "projects". These projects are defined in the top level server configuration. 
+This server configuration needs to also define details and addresses for the process that is doing the data transformation, 
+this includes MQTT broker details, HTTP and Websocket listening ports.
+
+Currently this server configuration is stored in the execution directory of the main program, however it can be 
+specified with the --config argument when executing the node program.
+
+Projects are currently stored locally stored in json files but these could ideally be stored anywhere (including at a remote
+web address), these projectConfig files are defined in the server config.json.
+
+An example of this server config is:
+
+		{
+			"MQTTBrokerAddress" : "summer.ceit.uq.edu.au",
+			"MQTTBrokerPort" : 1883,
+			"HTTPBindIP" : "172.16.174.132",
+			"HTTPBindPort" : 8080,
+			"WEBSocketIP" : "172.16.174.132",
+			"WebSocketPort" : 8081,
+
+			"projects" :
+			[
+				{
+					"name" : "AVControl",
+					"enabled" : false,
+					"configPath" : "config/AVControl.json"
+				},
+				{
+					"name" : "testChat",
+					"enabled" : true,
+					"configPath" : "config/testChat.json"
+				},
+				{
+					"name" : "test",
+					"enabled" : false,
+					"configPath" : "config/test.json"
+				}
+			]
+		}
+
+
 
 
 Inputs and Outputs

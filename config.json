@@ -1,13 +1,9 @@
 {
-	"notes" :  "note that you can't have a transformer transform twice to the same output; you define a 'project' which prefixes all address and url inputs (and outputs)",
 	"MQTTBrokerAddress" : "summer.ceit.uq.edu.au",
 	"MQTTBrokerPort" : 1883,
-	"HTTPBindIPold" : "192.168.1.106",
 	"HTTPBindIP" : "172.16.174.132",
 	"HTTPBindPort" : 8080,
-
 	"WEBSocketIP" : "172.16.174.132",
-	"WEBSocketIPold" : "192.168.1.106",
 	"WebSocketPort" : 8081,
 
 	"projects" :

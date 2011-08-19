@@ -10,12 +10,17 @@ websocketOutputs = [];
 
 _DEBUG = false;
 _VERBOSE = false;
+_CONFIGPATH = "config.json";
 process.argv.forEach(function (val, index, array) {
-    if (val == "--debug" || val == "-debug") _DEBUG = true;
-    if (val == "--verbose" || val == "-verbose") _VERBOSE = true;
+    if (val == "--debug") _DEBUG = true;
+    if (val == "--verbose") _VERBOSE = true;
+    if (val == "--config") {
+	if(process.argv.length > index && process.argv[index+1] != "--debug" && process.argv[index+1] != "--verbose")
+		_CONFIGPATH = process.argv[index+1];
+	}
 });
 
-fs.readFile('config.json', function (err, configdata) { //read the config file and then open the servers
+fs.readFile(_CONFIGPATH, function (err, configdata) { //read the config file and then open the servers
     if (err) throw err;
     config = JSON.parse(configdata);
  	if (_VERBOSE || _DEBUG) console.log("read config file, " + config.projects.length + " projects defined"); 
